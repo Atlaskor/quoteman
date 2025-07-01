@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  apache-php:
+    build:
+      context: ./php
+    container_name: apache-php
+    ports:
+      - "8080:80"
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: mwtn
+      POSTGRES_PASSWORD: "@Fr0nt1er@"
+      POSTGRES_DB: mwtn_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mwtn.net
+      PGADMIN_DEFAULT_PASSWORD: "@Fr0nt1er@"
+    ports:
+      - "8081:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+  ollama:
+    build:
+      context: ./custom-ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    command: >
+      bash -c "
+        ollama serve & 
+        sleep 5 && 
+        ollama pull whisper && 
+        ollama pull mistral &&
+        wait
+      "
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  ollama_data:
